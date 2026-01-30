@@ -2,6 +2,7 @@
 use core::marker::PhantomData;
 
 use mask_tracked_array::MaskTrackedArray;
+
 #[cfg(feature = "alloc-gen")]
 pub mod alloc_gen;
 pub trait ComputableBranch<L, BM, LM>
@@ -81,7 +82,7 @@ where
     leaves: LM,
     _phantom: PhantomData<(B, L)>,
 }
-pub struct Tree<B, L, BM, LM>
+pub struct TinyExprTree<B, L, BM, LM>
 where
     BM: MaskTrackedArray<BranchNode<B, L, BM, LM>>,
     LM: MaskTrackedArray<LeafNode<L>>,
@@ -139,7 +140,8 @@ where
             })
     }
 }
-impl<B, L, BM, LM> Tree<B, L, BM, LM>
+
+impl<B, L, BM, LM> TinyExprTree<B, L, BM, LM>
 where
     B: ComputableBranch<L, BM, LM>,
     L: ComputableLeaf,

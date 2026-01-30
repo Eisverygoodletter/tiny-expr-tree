@@ -14,7 +14,7 @@ use alloc::vec::Vec;
 use mask_tracked_array::MaskTrackedArray;
 use num_traits::{Bounded, ConstOne};
 
-use crate::{BranchNode, ChildrenMask, LeafNode, Tree};
+use crate::{BranchNode, ChildrenMask, LeafNode, TinyExprTree};
 pub struct ConstructableTreeBranch<B, L> {
     pub sub_branches: Vec<Box<ConstructableTreeBranch<B, L>>>,
     pub value: B,
@@ -96,7 +96,7 @@ impl<B, L> ConstructableTreeBranch<B, L> {
             .map(|index| <BM::MaskType as ConstOne>::ONE << index)
             .map_err(|_| ConstructionError::InsufficientBranchCapacity)
     }
-    pub fn to_tree<BM, LM>(self) -> Result<Tree<B, L, BM, LM>, ConstructionError>
+    pub fn to_tree<BM, LM>(self) -> Result<TinyExprTree<B, L, BM, LM>, ConstructionError>
     where
         BM: MaskTrackedArray<BranchNode<B, L, BM, LM>>,
         LM: MaskTrackedArray<LeafNode<L>>,
@@ -134,7 +134,7 @@ impl<B, L> ConstructableTreeBranch<B, L> {
                 leaf_mask,
             },
         };
-        Ok(Tree {
+        Ok(TinyExprTree {
             inner: crate::TreeInner {
                 branches: visitor.branches,
                 leaves: visitor.leaves,
