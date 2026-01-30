@@ -6,5 +6,7 @@ edition = "2024"
 [dependencies]
 mask-tracked-array = { version = "0.1.0", git = "https://github.com/Eisverygoodletter/mask-tracked-array", features = ["num_traits"]}
 num-traits = { version = "0.2.19", default-features = false }
+serde = { version = "1.0.228", optional = true, default-features = false, features = ["derive"]}
 [features]
 alloc-gen = []
+serde = ["dep:serde", "mask-tracked-array/serde"]

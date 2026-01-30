@@ -32,6 +32,8 @@ pub trait ComputableLeaf {
     fn compute(&self, context: &Self::LeafContext) -> Self::LeafOutput;
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(bound(serialize = "BM::MaskType: serde::Serialize + for<'de> serde::Deserialize<'de>, LM::MaskType: serde::Serialize + for<'de> serde::Deserialize<'de>")))]
 pub struct ChildrenMask<
     B,
     L,
@@ -47,10 +49,7 @@ where
     LM: MaskTrackedArray<LeafNode<L>>,
 {
     fn clone(&self) -> Self {
-        Self {
-            branch_mask: self.branch_mask.clone(),
-            leaf_mask: self.leaf_mask.clone(),
-        }
+        *self
     }
 }
 impl<B, L, BM, LM> Copy for ChildrenMask<B, L, BM, LM>
@@ -60,6 +59,7 @@ where
 {
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct BranchNode<
     B,
     L,
@@ -69,10 +69,12 @@ pub struct BranchNode<
     branch: B,
     mask: ChildrenMask<B, L, BM, LM>,
 }
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct LeafNode<L> {
     leaf: L,
 }
 
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TreeInner<B, L, BM, LM>
 where
     BM: MaskTrackedArray<BranchNode<B, L, BM, LM>>,
@@ -82,6 +84,7 @@ where
     leaves: LM,
     _phantom: PhantomData<(B, L)>,
 }
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct TinyExprTree<B, L, BM, LM>
 where
     BM: MaskTrackedArray<BranchNode<B, L, BM, LM>>,
