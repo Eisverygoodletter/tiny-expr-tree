@@ -1,4 +1,5 @@
 #![no_std]
+#![doc=include_str!("../README.md")]
 use core::marker::PhantomData;
 
 use mask_tracked_array::MaskTrackedArray;
