@@ -1,4 +1,4 @@
-# `no-std` `no-alloc` trees for embedded applications
+# `no-std` `no-alloc` config/expression trees for embedded applications
 Microcontroller programs often have to process some data before outputting it via some interface. Writing a customisable configuration engine for changing outputs based on user needs is very time consuming. This library provides an evaluatable tree structure that can be loaded on microcontrollers.
 
 Every branch and leaf in this a `TinyExprTree` can be evaluated to a value. Branches can also access values computed from their leaf nodes.
