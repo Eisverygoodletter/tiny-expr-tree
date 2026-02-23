@@ -34,23 +34,26 @@ pub trait ComputableLeaf {
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct ChildrenMask<BM, LM> {
     pub branch_mask: BM,
     pub leaf_mask: LM,
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug)]
 pub struct BranchNode<B, BM, LM> {
     branch: B,
     mask: ChildrenMask<BM, LM>,
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug)]
 pub struct LeafNode<L> {
     leaf: L,
 }
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug)]
 pub struct TreeInner<B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
@@ -61,6 +64,7 @@ where
     _phantom: PhantomData<(B, L, BM)>,
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[derive(Debug)]
 pub struct TinyExprTree<B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
@@ -69,6 +73,7 @@ where
     root: BranchNode<B, BM, LM>,
     inner: TreeInner<B, L, BA, LA, BM, LM>,
 }
+#[derive(Debug)]
 pub struct BranchControls<'a, B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
@@ -135,7 +140,7 @@ where
     ) -> impl Iterator<Item = L::LeafOutput> {
         self.inner_reference
             .leaves
-            .iter_filled_indices_mask(mask)
+            .iter_filled_indices_mask(mask & self.mask.leaf_mask)
             .map(|index| {
                 let leaf = unsafe { self.inner_reference.leaves.get_unchecked_mut(index) };
                 leaf.leaf.compute(context)

@@ -3,7 +3,7 @@ use tiny_expr_tree::{
     BranchNode, ComputableBranch, ComputableLeaf, LeafNode, TinyExprTree,
     alloc_gen::ConstructableTreeBranch, make_tree_aliases,
 };
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 enum BooleanLeaf {
     True,
     False,
@@ -20,7 +20,7 @@ impl ComputableLeaf for BooleanLeaf {
         }
     }
 }
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub enum BooleanComparator {
     And,
     Or,
@@ -40,24 +40,17 @@ where
         controls: tiny_expr_tree::BranchControls<'a, Self, BooleanLeaf, BA, LA, BM, LM>,
     ) -> Self::BranchOutput {
         let out = match self {
-            Self::And => {
-                println!("AND COMPUTE");
-                controls
-                    .compute_all_branches(context)
-                    .chain(controls.compute_all_leaves(context))
-                    .inspect(|v| println!("Item was {}", v))
-                    .all(std::convert::identity)
-            }
-            Self::Or => {
-                println!("OR COMPUTE");
-                controls
-                    .compute_all_branches(context)
-                    .chain(controls.compute_all_leaves(context))
-                    .inspect(|v| println!("Item was {}", v))
-                    .any(std::convert::identity)
-            }
+            Self::And => controls
+                .compute_all_branches(context)
+                .chain(controls.compute_all_leaves(context))
+                .inspect(|v| println!("Item was {}", v))
+                .all(std::convert::identity),
+            Self::Or => controls
+                .compute_all_branches(context)
+                .chain(controls.compute_all_leaves(context))
+                .inspect(|v| println!("Item was {}", v))
+                .any(std::convert::identity),
         };
-        println!("OUTPUTTING {:?}", out);
         out
     }
 }
@@ -73,9 +66,6 @@ fn basic() {
     sub_tree.add_leaf(BooleanLeaf::InsertedValue);
     construction.add_branch(sub_tree.clone());
     let tree: MiniTree = construction.to_tree().unwrap();
-    // assert!(tree.compute(&true));
-    let sub_tree_compute: MiniTree = sub_tree.to_tree().unwrap();
-    // assert!(!sub_tree_compute.compute(&false));
-    println!("Subtree success");
+    assert!(tree.compute(&true));
     assert!(!tree.compute(&false));
 }
