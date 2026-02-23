@@ -2,6 +2,8 @@
 name = "tiny-expr-tree"
 version = "0.1.0"
 edition = "2024"
+description = "no-std and no-alloc trees for microcontroller configurations"
+license-file = "LICENSE"
 
 [dependencies]
 mask-tracked-array = { version = "0.2.0"}
