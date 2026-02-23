@@ -6,6 +6,9 @@ use mask_tracked_array::{Mask, MaskTrackedArray};
 
 #[cfg(feature = "alloc-gen")]
 pub mod alloc_gen;
+/// Should be implemented on branch node structs. Sub-branch/leaf access is
+/// provided by [`BranchControls`] so you should not hold references to
+/// branches and other items.
 pub trait ComputableBranch<L, BA, LA, BM, LM>
 where
     Self: Sized,
@@ -24,6 +27,7 @@ where
         controls: BranchControls<'a, Self, L, BA, LA, BM, LM>,
     ) -> Self::BranchOutput;
 }
+/// Should be implemented on leaf nodes structs.
 pub trait ComputableLeaf {
     /// Context required to compute a leaf node.
     type LeafContext;
@@ -54,7 +58,7 @@ pub struct LeafNode<L> {
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug)]
-pub struct TreeInner<B, L, BA, LA, BM, LM>
+struct TreeInner<B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
     LA: MaskTrackedArray<LeafNode<L>, MaskType = LM>,
@@ -65,6 +69,9 @@ where
 }
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(Debug)]
+/// A tiny tree suitable for microcontroller use. This struct is not directly
+/// constructable and you should use [`alloc_gen::ConstructableTreeBranch`]s
+/// instead on the host computer.
 pub struct TinyExprTree<B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
@@ -74,6 +81,8 @@ where
     inner: TreeInner<B, L, BA, LA, BM, LM>,
 }
 #[derive(Debug)]
+/// Provides compute actions for [`ComputableBranch`]es and access to
+/// sub-branches and leaves.
 pub struct BranchControls<'a, B, L, BA, LA, BM, LM>
 where
     BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
@@ -92,21 +101,28 @@ where
     LA: MaskTrackedArray<LeafNode<L>, MaskType = LM>,
     LM: Mask,
 {
-    pub fn get_branch_mask(&self) -> BM {
+    /// Mask representing sub-branches
+    #[inline]
+    pub fn branch_mask(&self) -> BM {
         self.mask.branch_mask
     }
-    pub fn get_leaf_mask(&self) -> LM {
+    /// Mask representing leaves
+    #[inline]
+    pub fn leaf_mask(&self) -> LM {
         self.mask.leaf_mask
     }
+    /// Check if there are any sub-branches
     #[inline]
     pub fn has_branches(&self) -> bool {
         self.mask.branch_mask != BM::NONE_SELECTED
     }
+    /// Check if there are any leaves
     #[inline]
     pub fn has_leaves(&self) -> bool {
         self.mask.leaf_mask != LM::NONE_SELECTED
     }
-
+    /// Compute the value of all sub-branches specified in the mask.
+    #[inline]
     pub fn compute_branches(
         &self,
         context: &B::BranchContext,
@@ -127,12 +143,16 @@ where
             branch.branch.compute(context, controls)
         })
     }
+    /// Compute the value of all sub-branches
+    #[inline]
     pub fn compute_all_branches(
         &self,
         context: &B::BranchContext,
     ) -> impl Iterator<Item = <B as ComputableBranch<L, BA, LA, BM, LM>>::BranchOutput> {
         self.compute_branches(context, <BA::MaskType as Mask>::ALL_SELECTED)
     }
+    /// Compute the value of sub-leaves specified in the mask
+    #[inline]
     pub fn compute_leaves(
         &self,
         context: &L::LeafContext,
@@ -146,11 +166,43 @@ where
                 leaf.leaf.compute(context)
             })
     }
+    /// Compute the values of all leaves
+    #[inline]
     pub fn compute_all_leaves(
         &self,
         context: &L::LeafContext,
     ) -> impl Iterator<Item = <L as ComputableLeaf>::LeafOutput> {
         self.compute_leaves(context, <LM as Mask>::ALL_SELECTED)
+    }
+}
+
+impl<'a, B, L, BA, LA, BM, LM> BranchControls<'a, B, L, BA, LA, BM, LM>
+where
+    B: ComputableBranch<L, BA, LA, BM, LM>,
+    L: ComputableLeaf<LeafContext = B::BranchContext, LeafOutput = B::BranchOutput>,
+    BM: Mask,
+    BA: MaskTrackedArray<BranchNode<B, BM, LM>, MaskType = BM>,
+    LA: MaskTrackedArray<LeafNode<L>, MaskType = LM>,
+    LM: Mask,
+{
+    /// Compute the values of sub-branches and leaves specified in the masks
+    #[inline]
+    pub fn compute_both(
+        &self,
+        context: &B::BranchContext,
+        branch_mask: BM,
+        leaf_mask: LM,
+    ) -> impl Iterator<Item = B::BranchOutput> {
+        self.compute_branches(context, branch_mask)
+            .chain(self.compute_leaves(context, leaf_mask))
+    }
+    /// Compute the values of all sub-branches and leaves
+    #[inline]
+    pub fn compute_all_both(
+        &self,
+        context: &B::BranchContext,
+    ) -> impl Iterator<Item = B::BranchOutput> {
+        self.compute_both(context, BM::ALL_SELECTED, LM::ALL_SELECTED)
     }
 }
 
@@ -163,6 +215,9 @@ where
     BM: Mask,
     LM: Mask,
 {
+    /// Compute a value using the given context starting at the root node. The
+    /// exact operations done is dependent on the [`ComputableBranch`] and
+    /// [`ComputableLeaf`] implementations you supply.
     pub fn compute(&self, context: &B::BranchContext) -> B::BranchOutput {
         let base_access = BranchControls {
             inner_reference: &self.inner,
@@ -172,6 +227,16 @@ where
     }
 }
 
+/// Makes type aliases for [`TinyExprTree`] to make naming them easier especially
+/// with the generics. This macro expects the following as its argument:
+/// 1. Identifier for the alias.
+/// 2. The type you implemented [`ComputableBranch`] on.
+/// 3. The type you implemented [`ComputableLeaf`] on.
+/// 4. The mask type for branch nodes.
+/// 5. The mask type for leaf nodes.
+///
+/// The capacity of the tree for branch and leaf nodes is equal to the number
+/// of bits in the branch and leaf node masks.
 #[macro_export]
 macro_rules! make_tree_aliases {
     (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u8) => {
@@ -206,9 +271,7 @@ macro_rules! make_tree_aliases {
     };
     ($tree_ident:ident, $branch_node:ty, $leaf_node:ty, $bm:tt, $lm:tt) => {
         make_tree_aliases!(@BA_GENERATION BA, $branch_node, $leaf_node, $lm, $bm);
-        // type BA = MaskTrackedArrayU8<BranchNode<$branch_node, $bm, $lm>>;
         make_tree_aliases!(@LA_GENERATION LA, $leaf_node, $lm);
-        // type LA = MaskTrackedArrayU8<LeafNode<$leaf_node>>;
         type $tree_ident = TinyExprTree<$branch_node, $leaf_node, BA, LA, $bm, $lm>;
     };
 }
