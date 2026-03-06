@@ -54,7 +54,7 @@ where
         out
     }
 }
-make_tree_aliases!(MiniTree, BooleanComparator, BooleanLeaf, u8, u16);
+make_tree_aliases!(pub MiniTree, BooleanComparator, BooleanLeaf, u8, u16);
 
 #[cfg(feature = "alloc-gen")]
 #[test]

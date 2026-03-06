@@ -239,39 +239,39 @@ where
 /// of bits in the branch and leaf node masks.
 #[macro_export]
 macro_rules! make_tree_aliases {
-    (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u8) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU8<BranchNode<$branch_node, u8, $lm>>;
+    (@BA_GENERATION $vis:vis $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u8) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU8<BranchNode<$branch_node, u8, $lm>>;
     };
-    (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u16) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU16<BranchNode<$branch_node, u16, $lm>>;
+    (@BA_GENERATION $vis:vis $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u16) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU16<BranchNode<$branch_node, u16, $lm>>;
     };
-    (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u32) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU32<BranchNode<$branch_node, u32, $lm>>;
+    (@BA_GENERATION $vis:vis $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u32) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU32<BranchNode<$branch_node, u32, $lm>>;
     };
-    (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u64) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU64<BranchNode<$branch_node, u64, $lm>>;
+    (@BA_GENERATION $vis:vis $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u64) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU64<BranchNode<$branch_node, u64, $lm>>;
     };
-    (@BA_GENERATION $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u128) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU128<BranchNode<$branch_node, u128, $lm>>;
+    (@BA_GENERATION $vis:vis $alias_name:ident, $branch_node:ty, $leaf_node:ty, $lm:ty, u128) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU128<BranchNode<$branch_node, u128, $lm>>;
     };
-    (@LA_GENERATION $alias_name:ident, $leaf_node:ty, u8) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU8<LeafNode<$leaf_node>>;
+    (@LA_GENERATION $vis:vis $alias_name:ident, $leaf_node:ty, u8) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU8<LeafNode<$leaf_node>>;
     };
-    (@LA_GENERATION $alias_name:ident, $leaf_node:ty, u16) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU16<LeafNode<$leaf_node>>;
+    (@LA_GENERATION $vis:vis $alias_name:ident, $leaf_node:ty, u16) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU16<LeafNode<$leaf_node>>;
     };
-    (@LA_GENERATION $alias_name:ident, $leaf_node:ty, u32) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU32<LeafNode<$leaf_node>>;
+    (@LA_GENERATION $vis:vis $alias_name:ident, $leaf_node:ty, u32) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU32<LeafNode<$leaf_node>>;
     };
-    (@LA_GENERATION $alias_name:ident, $leaf_node:ty, u64) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU64<LeafNode<$leaf_node>>;
+    (@LA_GENERATION $vis:vis $alias_name:ident, $leaf_node:ty, u64) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU64<LeafNode<$leaf_node>>;
     };
-    (@LA_GENERATION $alias_name:ident, $leaf_node:ty, u128) => {
-        type $alias_name = mask_tracked_array::MaskTrackedArrayU128<LeafNode<$leaf_node>>;
+    (@LA_GENERATION $vis:vis $alias_name:ident, $leaf_node:ty, u128) => {
+        $vis type $alias_name = mask_tracked_array::MaskTrackedArrayU128<LeafNode<$leaf_node>>;
     };
-    ($tree_ident:ident, $branch_node:ty, $leaf_node:ty, $bm:tt, $lm:tt) => {
-        make_tree_aliases!(@BA_GENERATION BA, $branch_node, $leaf_node, $lm, $bm);
-        make_tree_aliases!(@LA_GENERATION LA, $leaf_node, $lm);
-        type $tree_ident = TinyExprTree<$branch_node, $leaf_node, BA, LA, $bm, $lm>;
+    ($vis:vis $tree_ident:ident, $branch_node:ty, $leaf_node:ty, $bm:tt, $lm:tt) => {
+        make_tree_aliases!(@BA_GENERATION $vis BA, $branch_node, $leaf_node, $lm, $bm);
+        make_tree_aliases!(@LA_GENERATION $vis LA, $leaf_node, $lm);
+        $vis type $tree_ident = TinyExprTree<$branch_node, $leaf_node, BA, LA, $bm, $lm>;
     };
 }
